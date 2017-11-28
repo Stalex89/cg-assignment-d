@@ -1,0 +1,10 @@
+package start;
+
+public enum ToolOperationMode {
+		OP_IMAGE_ROTATION, 
+		OP_IMAGE_SCALING, 
+		OP_IMAGE_TRANSLATION,
+		OP_SHAPE_SCALING,
+		OP_SHAPE_TRANSLATION,
+		OP_NONE 
+	};
