@@ -14,14 +14,21 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JWindow;
 import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
+
+import start.ImageRectangle.RectVertices;
+
+
+
 
 
 
@@ -46,7 +53,7 @@ public class MouseTransferListener implements MouseListener, MouseMotionListener
 	ButtonPanel bPanel;
 	ImageBuffer buffer;
 	
-	ImageRectangle picture_caught = null;
+
 	boolean isAtPoint = false;
 	
 	Tool currTool = Tool.TOOL_NONE;
@@ -68,6 +75,8 @@ public class MouseTransferListener implements MouseListener, MouseMotionListener
 	
 	// Component for checking where mouse released
 	Component lastEntered;
+	
+
 	
 	@Override
 	public void mouseDragged(MouseEvent e) {
@@ -98,6 +107,39 @@ public class MouseTransferListener implements MouseListener, MouseMotionListener
 					// Change position of the existing shape
 					dPanel.UpdateShapePosition( e.getX(), e.getY() );	
 				}
+				
+				for(ImageRectangle image : dPanel.images)
+				{
+				
+					if ( image.rect_caught ) 
+				      {
+				         // Create two 2D points representing start and end position for the current mini-move
+				         Point2D.Double p_p_panel = new java.awt.geom.Point2D.Double( dPanel.m_press_x, dPanel.m_press_y );
+				         Point2D.Double r_p_panel = new java.awt.geom.Point2D.Double(e.getX(), e.getY());
+	
+				         // Modify shape transform according to current operation mode         
+				         if ( op_mode == ToolOperationMode.OP_IMAGE_ROTATION )                       
+				            image.rotateShapeByPoints( p_p_panel, r_p_panel );
+				         else if ( op_mode == ToolOperationMode.OP_IMAGE_TRANSLATION )
+				         {
+				        	image.translate(e.getX()-dPanel.m_press_x, e.getY()-dPanel.m_press_y);
+				        	dPanel.m_press_x = e.getX();
+				        	dPanel.m_press_y = e.getY();
+				         }
+				         
+				         else if ( op_mode == ToolOperationMode.OP_IMAGE_SCALING )
+				            image.scaleShapeByPoints( p_p_panel, r_p_panel );         
+				              
+				         // Set current mouse position to be the start position 
+				         // for the next mini-move         
+				         dPanel.m_press_x = e.getX();
+				         dPanel.m_press_y = e.getY();
+				         
+				         dPanel.repaint();       
+				      }  
+				}
+				
+				
 			}
 			
 			else 
@@ -155,6 +197,8 @@ public class MouseTransferListener implements MouseListener, MouseMotionListener
 					//find new end coordinates
 			        dPanel.x2 = e.getX();
 			        dPanel.y2 = e.getY();
+			        
+			        
 			    	
 			        //draw new circle
 			        //g2d.draw(new Ellipse2D.Double(Math.min(x1,x2),Math.min(y1,y2),Math.abs(x2-x1),Math.abs(y2-y1)));
@@ -376,8 +420,8 @@ public class MouseTransferListener implements MouseListener, MouseMotionListener
 		// Check if mouse was pressed on DrawPanel
 		else if(p instanceof DrawPanel)
 		{
-			int m_press_x =  e.getX();
-		    int m_press_y =  e.getY();
+			dPanel.m_press_x =  e.getX();
+		    dPanel.m_press_y =  e.getY();
 			
 			System.out.println("MouseTransferAdapter - mouse pressed on DrawPanel");
 			
@@ -493,20 +537,35 @@ public class MouseTransferListener implements MouseListener, MouseMotionListener
 			{
 				// Check is mouse position near the vertex of the rectangle
 				// and set appropriate operation mode (scale or rotate)
-				if (image.catchRectangle(m_press_x, m_press_y))
+				if (image.catchRectangle(dPanel.m_press_x, dPanel.m_press_y))
 				{
 					// If we pressed with left mouse button
-					if (e.getButton() == MouseEvent.BUTTON1)
+					if (e.getButton() == MouseEvent.BUTTON1 )
 					{
+						//dPanel.picture_caught = image;
+						
+						if (image.vert_caught == RectVertices.CENTER)
+						{
+							System.out.println("Left mouse button was pressed at image center, translation initiated");
+							op_mode = ToolOperationMode.OP_IMAGE_TRANSLATION;
+						}
+						else 
+						{
 						System.out.println("Left mouse button was pressed at image, rotation initiated");
 						op_mode = ToolOperationMode.OP_IMAGE_ROTATION;
+						}
 					}
-					else
+					else if	(e.getButton() == MouseEvent.BUTTON3)
 					{
-						System.out.println("Left mouse button was pressed at image, scaling initiated");
+						System.out.println("Wheel mouse button was pressed at image, scaling initiated");
 						op_mode = ToolOperationMode.OP_IMAGE_SCALING;
 					}
-				}
+					else if (e.getButton() == MouseEvent.BUTTON2)
+					{
+						dPanel.images.remove(image);
+						dPanel.repaint();
+					}
+				}	
 			}
 		}
 		
@@ -557,6 +616,9 @@ public class MouseTransferListener implements MouseListener, MouseMotionListener
 		
 		if(p instanceof DrawPanel)
 		{
+			int m_press_x =  e.getX();
+		    int m_press_y =  e.getY();
+		
 			// If left mouse button pressed
 			if ( e.getButton() == MouseEvent.BUTTON1)
 			{		
@@ -571,13 +633,40 @@ public class MouseTransferListener implements MouseListener, MouseMotionListener
 					{
 						isAtPoint = true;
 						g2d.draw(new Rectangle2D.Double (dPanel.xp-5,dPanel.yp-5,10,10));
-					}
+					
+					
+					//}
+					
 					
 					// Untrack the shape (need to be tracked again)
 					dPanel.shape_caught = -1;
 		
 					g2d.setPaintMode(); 
+					
+					}
+				
+					
+					for(ImageRectangle image : dPanel.images)
+					{	
+						if ( image.rect_caught )
+					      {
+					         // Create two 2D points representing start and end position for the current mini-move         
+					         Point2D.Double p_p_panel = new java.awt.geom.Point2D.Double( m_press_x, m_press_y );
+					         Point2D.Double r_p_panel = new java.awt.geom.Point2D.Double(e.getX(), e.getY());
+	
+					         // Modify shape transform according to current operation mode
+					         if ( op_mode == ToolOperationMode.OP_IMAGE_ROTATION)                       
+					            image.rotateShapeByPoints(  p_p_panel, r_p_panel );
+					         else
+					            image.scaleShapeByPoints( p_p_panel, r_p_panel );              
+					        
+					         image.rect_caught = false;
+					         dPanel.repaint();       
+					      }       
+					}
+				
 				}
+				
 			
 				else 
 				{
@@ -642,7 +731,40 @@ public class MouseTransferListener implements MouseListener, MouseMotionListener
 	@Override
 	public void mouseClicked(MouseEvent e) 
 	{
+		System.out.println("MouseTransferAdapter - mouse clicked at x=" + e.getX() + ", y=" + e.getY());
+		
+		
 
+		Object p = e.getSource();
+		//System.out.println("MouseTransferAdapter - mouse pressed on " + p.getClass());
+		
+		if(p instanceof DrawPanel)
+		{
+			if(e.getButton() == MouseEvent.BUTTON1)
+			{
+				if( currTool == Tool.TOOL_SELECT)
+				{
+					for(ImageRectangle image : dPanel.images)
+					{
+						// Check is mouse position near the vertex of the rectangle
+						// and set appropriate operation mode (scale or rotate)
+						if (image.catchRectangle(e.getX(), e.getY()))
+						{	
+							if(image.vert_caught == RectVertices.CENTER)
+							{
+								//Graphics g = dPanel.getGraphics();
+								//Graphics2D  g2d = (Graphics2D)g;  
+								System.out.println("Image selected and saved");
+								//image.imageSelected(g2d);
+								dPanel.picture_caught = image;
+								//dPanel.repaint();
+							}
+						}
+					}
+				}
+			}
+		}
+		
 		
 	}
 
@@ -671,7 +793,77 @@ public class MouseTransferListener implements MouseListener, MouseMotionListener
 	    	System.out.println("Circle selected");
 	    	currTool = Tool.TOOL_CIRCLE;
 	    }
-
+		
+	    else if (source == bPanel.button1)
+	    {	
+	    	if(dPanel.picture_caught != null) 
+	    	{
+		    	System.out.println("Translate Left");
+		    	dPanel.picture_caught.translate( -10, 0);
+		    	dPanel.repaint();
+	    	}
+	    }
+	    else if (source == bPanel.button2){
+	    	if(dPanel.picture_caught != null) 
+	    	{
+		    	System.out.println("Translate Right");
+		    	dPanel.picture_caught.translate( 10, 0);
+		    	dPanel.repaint();
+	    	}
+	    }
+	    else if (source == bPanel.button3){
+	    	if(dPanel.picture_caught != null) 
+	    	{
+		    	System.out.println("Translate Up");
+		    	dPanel.picture_caught.translate( 0, -10 );
+		    	dPanel.repaint();
+	    	}
+	    }
+	    else if (source == bPanel.button4){
+	    	if(dPanel.picture_caught != null) 
+	    	{
+		    	System.out.println("Translate Down");
+		    	dPanel.picture_caught.translate( 0, 10 );
+		    	dPanel.repaint();
+	    	}
+	    }
+	    else if (source == bPanel.button5){
+	    	if(dPanel.picture_caught != null) 
+	    	{
+		    	System.out.println("Rotate Left");
+		    	dPanel.picture_caught.rotateByDegs( -10 );
+		    	dPanel.repaint();
+	    	}
+	    }
+	    else if (source == bPanel.button6){
+	    	if(dPanel.picture_caught != null) 
+	    	{
+		    	System.out.println("Rotate Right");
+		    	dPanel.picture_caught.rotateByDegs( 10 );
+		    	dPanel.repaint();
+	    	}
+	    }
+	    else if (source == bPanel.button7){
+	    	if(dPanel.picture_caught != null) 
+	    	{
+		    	System.out.println("Push to Top");
+		    	dPanel.pushToTop();
+		    	dPanel.repaint();
+	    	}
+	    }
+	    else if (source == bPanel.button8){
+	    	if(dPanel.picture_caught != null) 
+	    	{
+		    	System.out.println("Push to Bottom");
+		    	dPanel.pushToBottom();
+		    	dPanel.repaint();
+	    	}
+	    }
+	    else if (source == bPanel.saveImageButton)
+	    {
+	    	dPanel.saveImage();
+	    }
+	    
 	    else 
 	    {
 	    	System.out.println("None selected");

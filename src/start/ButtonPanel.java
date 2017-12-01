@@ -14,7 +14,9 @@ public class ButtonPanel extends JPanel //implements ActionListener
 	JButton button3;  	
 	JButton button4;  	
 	JButton button5;  	
-	JButton button6;  	
+	JButton button6;
+	JButton button7;
+	JButton button8;
 	
 	// Three text field for RGB values
 	JTextField rField;
@@ -28,7 +30,7 @@ public class ButtonPanel extends JPanel //implements ActionListener
 	ButtonPanel()
 	{
 		super();
-		setLayout(new GridLayout(2,6));
+		setLayout(new GridLayout(2,7));
 		
 		
 		button1 = new JButton( "Translate left" );
@@ -36,7 +38,9 @@ public class ButtonPanel extends JPanel //implements ActionListener
 		button3 = new JButton( "Translate up" ); 
 		button4 = new JButton( "Translate down" ); 
 		button5 = new JButton( "Rotate left" ); 
-		button6 = new JButton( "Rotate right" );  
+		button6 = new JButton( "Rotate right" ); 
+		button7 = new JButton( "Push to Top" );
+		button8 = new JButton( "Pubh to Bottom" );
 	       
 	    add( button1 );
 	    add( button2 ); 
@@ -44,6 +48,8 @@ public class ButtonPanel extends JPanel //implements ActionListener
 	    add( button4 );
 	    add( button5 ); 
 	    add( button6 );
+	    add( button7 ); 
+	    add( button8 );
 	    
 		rField = new JTextField( "0" );
 		gField = new JTextField( "0" );

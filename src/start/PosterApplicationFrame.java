@@ -7,7 +7,7 @@ import java.io.*;
 import java.util.Scanner;
 
 
-public class PosterApplication extends JFrame
+public class PosterApplicationFrame extends JFrame
 {
 	MouseTransferListener mouseListener;
 
@@ -21,7 +21,7 @@ public class PosterApplication extends JFrame
 	protected ShapePanel sPanel;
 	protected ImagePanel iPanel;
 	
-	public PosterApplication()
+	public PosterApplicationFrame()
     { 
 		// Set size and border layout of application
 		this.setSize(800, 600);
@@ -69,6 +69,16 @@ public class PosterApplication extends JFrame
 	    sPanel.button2.addActionListener(mouseListener);
 	    sPanel.button3.addActionListener(mouseListener);
 	    sPanel.button4.addActionListener(mouseListener);
+	    
+		bPanel.button1.addActionListener(mouseListener);
+		bPanel.button2.addActionListener(mouseListener);
+		bPanel.button3.addActionListener(mouseListener);
+		bPanel.button4.addActionListener(mouseListener);
+		bPanel.button5.addActionListener(mouseListener);
+		bPanel.button6.addActionListener(mouseListener);
+		bPanel.button7.addActionListener(mouseListener);
+		bPanel.button8.addActionListener(mouseListener);
+		bPanel.saveImageButton.addActionListener(mouseListener);
 		
 	    iPanel.add(new JScrollPane(mPanel));
 	    
@@ -85,6 +95,12 @@ public class PosterApplication extends JFrame
         setVisible(true);
     }
 	
-	// ADD METHODS OF LOADING/SAVING FILES 
+	public void paintComponents(Graphics g)
+	{
+		super.paintComponents(g);
+		System.out.println("FRAME PAINT COMPINENT CALLED");
+
+   
+	}
 	
 }

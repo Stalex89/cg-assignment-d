@@ -23,7 +23,7 @@ public class DrawPanel extends JPanel {
 	
 	
 	ArrayList<ImageRectangle> images; 
-	
+	ImageRectangle picture_caught = null;
 	//Array to store all shapes
 	ArrayList<Shape> shapes = new ArrayList<Shape>();
 	
@@ -43,6 +43,9 @@ public class DrawPanel extends JPanel {
 	
 	// End points coordinates
 	int x1, y1, x2, y2;
+	
+	int m_press_x = -100; 
+	int m_press_y = -100;
 	
 	DrawPanel()
 	{
@@ -75,7 +78,7 @@ public class DrawPanel extends JPanel {
 	
 	public void paintComponent(Graphics g)
 	{
-		
+		System.out.println("PAINT COMPINENT CALLED");
 		Graphics2D g2d = (Graphics2D) g;
 	    super.paintComponent(g);   
 	    
@@ -499,7 +502,7 @@ public class DrawPanel extends JPanel {
 
 	}
 	
-	private void saveImage() 
+	void saveImage() 
 	{
 		BufferedImage image = new BufferedImage (this.getWidth(), this.getHeight(), BufferedImage.TYPE_INT_RGB);
 		
@@ -507,10 +510,41 @@ public class DrawPanel extends JPanel {
 	         Graphics2D graphic = image.createGraphics();
 	         File output = new File("output.jpeg");
 	         drawImage(graphic);  // actual drawing on your image
+	 			for(ImageRectangle picture : images)
+	 			{
+				picture.drawWhole(graphic);
+	 			}
 	         ImageIO.write(image, "jpeg", output);
 	         System.out.println("Image has been created");
 	    } catch(IOException log) {
+	    		System.out.println("Imagae creation unsuccessful");
 	         System.out.println(log);
 	    }
+	}
+	
+	void pushToTop() 
+	{
+		ImageRectangle buffer = picture_caught;
+		images.remove(picture_caught);
+		images.add(buffer);
+	}
+	
+	void pushToBottom() 
+	{
+		ArrayList<ImageRectangle> bufferArray = new ArrayList<ImageRectangle>();
+		for(ImageRectangle img : images)
+		{
+			bufferArray.add(img);
+		}
+		ImageRectangle buffer = picture_caught;
+		bufferArray.remove(picture_caught);
+		images.clear();
+		images.add(buffer);
+		for(int idx = bufferArray.size()-1; idx >=0; --idx)
+		{
+			System.out.println("idx = " + idx);
+			images.add(bufferArray.get(idx));
+		}
+		
 	}
 }

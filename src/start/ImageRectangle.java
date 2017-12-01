@@ -1,5 +1,7 @@
 package start;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
@@ -54,7 +56,7 @@ class ImageRectangle extends Rectangle2D.Double
 	ImageRectangle( BufferedImage image, int x_pos, int y_pos )
 	{     
 		// Create placeholder rectangle 
-		super( x_pos, y_pos, DEF_RECT_SIZE_X, DEF_RECT_SIZE_Y );
+		super( 0, 0, DEF_RECT_SIZE_X, DEF_RECT_SIZE_Y );
 	    
 		img = image;
 		
@@ -75,12 +77,14 @@ class ImageRectangle extends Rectangle2D.Double
 		//System.out.println("new ImgRect size = (" + rect_size_x + ", " + rect_size_y + ")");
 	    
 	    // Reset rectangle size and location to fit to the size image
-	    setRect( x_pos, y_pos, rect_width, rect_height );
+	    setRect( 0, 0, rect_width, rect_height );
 	      
 	    // CAUSES BUG With IMAGE POSITIONING
-	    double  init_scale = DEF_RECT_SIZE_Y / (double)rect_height;
-	    transform.setToScale( init_scale, init_scale );
-	      
+	    //double  init_scale = DEF_RECT_SIZE_Y / (double)rect_height;
+	    //transform.setToScale( init_scale, init_scale );
+	    
+	    transform.setToTranslation(x_pos, y_pos);
+	    
 	    try 
 	    {
 	    	inverse = transform.createInverse();
@@ -89,24 +93,28 @@ class ImageRectangle extends Rectangle2D.Double
 	    { 
 	    	inverse = null; 
 	    }
+	    
+	    
 	}
 	
 	   // This method draws the whole shape elements 
 	   void drawWhole(Graphics2D g2d)
 	   {      
 	      // Assign the shape transformation to the drawing context 
-	      //g2d.transform( transform );        
+	      g2d.transform( transform );        
 	      
 	      g2d.draw( this );
 	      if ( img != null )
-	    	  g2d.drawImage( img, rect_x, rect_y, null );
+	    	  g2d.drawImage( img, 0, 0, null );
 	      
 	      
 	      // CAUSES BUG WITH IMAGE POSITIONING!!!!!
 	      // Restore identity transform to avoid incorrect drawings of controls
-	      //g2d.setTransform(new AffineTransform());      
+	      g2d.setTransform(new AffineTransform());      
 	      
 	   }
+	   
+	   
 	   
 	   // This method tests if passed point in panel coordinates is close to one of rectangle vertices
 	   boolean  catchRectangle( int x, int y )
@@ -152,9 +160,9 @@ class ImageRectangle extends Rectangle2D.Double
 	      
 	      
 	      // Catch the center
-	      Point2D.Double rect_center =  new Point2D.Double((p.x-rect_width)/2,(p.y-rect_height)/2);
+	      Point2D.Double rect_center =  new Point2D.Double(p.x-rect_width/2,p.y-rect_height/2);
 	      
-	      if (( Math.abs(rect_center.x) < tolerance ) && ( Math.abs( rect_center.y) < tolerance ))
+	      if (( Math.abs(rect_center.x) < tolerance*4 ) && ( Math.abs( rect_center.y) < tolerance*4 ))
 	      {
 	    	 System.out.println("Center caught");
 	         rect_caught = true;
@@ -168,6 +176,18 @@ class ImageRectangle extends Rectangle2D.Double
 	      
 	      return false;
 	   }
+	   
+	   void imageSelected(Graphics2D g2d) 
+	   {
+		   g2d.transform( transform );        
+		      
+		   g2d.setColor(Color.RED);
+		   g2d.setStroke(new BasicStroke(1.5f));
+		   g2d.draw( this );
+		   g2d.setColor(Color.BLACK);
+		   g2d.setTransform(new AffineTransform());   
+	   }
+
 
 	   double rotateShapeByPoints(
 	      Point2D.Double p_p_panel, // mouse press point - start position for rotation
